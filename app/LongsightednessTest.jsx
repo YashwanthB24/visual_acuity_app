@@ -34,20 +34,7 @@ export default function LongsightednessTest() {
           </TouchableOpacity>
         </View>
 
-        {/* MNREAD Chart Option */}
-        <View style={styles.card}>
-          <Image source={mnreadChartImage} style={styles.chartIcon} />
-          <Text style={styles.cardTitle}>MNREAD Chart</Text>
-          <Text style={styles.cardSubtitle}>
-            The MNREAD Chart is used to assess reading speed and fluency with sentences of varying sizes.
-          </Text>
-          <TouchableOpacity
-            style={styles.selectButton}
-            onPress={() => router.push("/MNReadChartTest")} // Navigate to MNREAD Chart Test
-          >
-            <Text style={styles.buttonText}>Select MNREAD Chart</Text>
-          </TouchableOpacity>
-        </View>
+
       </View>
     </View>
   );

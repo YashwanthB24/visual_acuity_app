@@ -1,3 +1,4 @@
+//Tumbling E Chart Test
 import React, { useState, useEffect  } from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet, ScrollView, Alert } from 'react-native';
 import { Audio } from 'expo-av';
@@ -7,35 +8,34 @@ import { supabase } from '../supabase';
 import leftEyeIcon from '@/assets/images/lefteye-icon.png';
 import rightEyeIcon from '@/assets/images/righteye-icon.png';
 
-// Snellen digit chart data
 const snellenDigitChart = [
   { line: '1', questions: [
     { question: 'What is the orientation of the letter E on the first line of the chart?', answer: 'right' },
-  ], score: "20/200" },
+  ], score: "6/60" },
   { line: '2', questions: [
     { question: 'What is the orientation of first letter being displayed on the second line of the chart?', answer: 'down' },
     { question: 'What is the rientation of last letter being displayed on the second line of the chart?', answer: 'right' },
-  ], score: "20/100" },
+  ], score: "6/30" },
   { line: '3', questions: [
     { question: 'What is the orientation of middle letter being displayed on the third line of the chart?', answer: 'up' },
     { question: 'What is the orientation of first letter being displayed on the third line of the chart?', answer: 'left' },
-  ], score: "20/70" },
+  ], score: "6/20" },
   { line: '4', questions: [
     { question: 'What is the orientation of third letter being displayed on the fourth line of the chart?',  answer: 'right' },
     { question: 'What is the orientation of second letter being displayed on the fourth line of the chart?',  answer: 'up' },
-  ], score: "20/50" },
+  ], score: "6/15" },
   { line: '5', questions: [
     { question: 'What is the orientation of middle letter being displayed on the fifth line of the chart?',  answer: 'left' },
     { question: 'What is the orientation of 4th letter being displayed on the fifth line of the chart?',  answer: 'right' },
-  ], score: "20/40" },
+  ], score: "6/12" },
   { line: '6', questions: [
     { question: 'What is the orientation of last letter being displayed on the sixth line of the chart?', answer: 'up' },
     { question: 'What is the orientation of second to last letter being on the displayed sixth line of the chart?', answer: 'up' },
-  ], score: "20/30" },
+  ], score: "6/9" },
   { line: '7', questions: [
     { question: 'What is the orientation of second letter being displayed on the seventh line of the chart?', answer: 'left' },
     { question: 'What is the orientation of 5th letter being displayed on the seventh line of the chart?', answer: 'down' },
-  ], score: "20/20" },
+  ], score: "6/6" },
 ];
 
 const TumblingEChartTest = () => {
@@ -350,6 +350,38 @@ const TumblingEChartTest = () => {
   };
   
 
+  const getResultDescription = (score) => {
+    if (!score) return '';
+  
+    const [numerator, denominator] = score.split('/').map(Number);
+    const ratio = numerator / denominator;
+  
+    let description = '';
+    let color = '#000'; // Default color
+  
+    if (ratio <= 0.1) { // 6/60 or worse
+      description = 'Significant correction needed - Legally blind without correction';
+      color = 'red';
+    } else if (ratio <= 0.2) { // 6/30
+      description = 'Significant correction needed';
+      color = 'orange';
+    } else if (ratio <= 0.33) { // 6/20
+      description = 'Moderate correction needed';
+      color = 'yellow';
+    } else if (ratio <= 0.5) { // 6/15
+      description = 'Mild correction needed';
+      color = 'lightgreen';
+    } else if (ratio <= 0.66) { // 6/12
+      description = 'Near perfect vision';
+      color = 'green';
+    } else if (ratio <= 1) { // 6/9, 6/8, 6/6
+      description = 'Excellent vision';
+      color = 'darkgreen';
+    }
+  
+    return { description, color };
+  };
+  
   const renderResults = () => {
     return (
       <ScrollView contentContainerStyle={styles.resultsContainer}>
@@ -359,8 +391,8 @@ const TumblingEChartTest = () => {
           <Text style={styles.resultText}>
             Score: {results.leftEye}
           </Text>
-          <Text style={styles.resultDescription}>
-            {getResultDescription(results.leftEye)}
+          <Text style={[styles.resultDescription, { color: getResultDescription(results.leftEye).color }]}>
+            {getResultDescription(results.leftEye).description}
           </Text>
         </View>
         <View style={styles.eyeResultContainer}>
@@ -368,36 +400,12 @@ const TumblingEChartTest = () => {
           <Text style={styles.resultText}>
             Score: {results.rightEye}
           </Text>
-          <Text style={styles.resultDescription}>
-            {getResultDescription(results.rightEye)}
+          <Text style={[styles.resultDescription, { color: getResultDescription(results.rightEye).color }]}>
+            {getResultDescription(results.rightEye).description}
           </Text>
         </View>
       </ScrollView>
     );
-  };
-  const getResultDescription = (score) => {
-    if (!score) return '';
-  
-    // Parse the fraction (e.g., "20/200" -> ratio of 20/200 = 0.1)
-    const [numerator, denominator] = score.split('/').map(Number);
-    const ratio = numerator / denominator;
-  
-    // Define vision categories based on Snellen score ratios
-    if (ratio <= 0.1) { // 20/200 or worse
-      return 'Significant correction needed - Legally blind without correction';
-    } else if (ratio <= 0.2) { // 20/100
-      return 'Significant correction needed';
-    } else if (ratio <= 0.33) { // 20/60
-      return 'Moderate correction needed';
-    } else if (ratio <= 0.5) { // 20/40
-      return 'Mild correction needed';
-    } else if (ratio <= 0.67) { // 20/30
-      return 'Minor correction may be needed';
-    } else if (ratio >= 1.0) { // 20/20 or better
-      return 'Normal vision range';
-    } else {
-      return 'Vision slightly below normal';
-    }
   };
   return (
     <View style={styles.container}>

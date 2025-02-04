@@ -1,3 +1,4 @@
+//Snellen Digit Chart
 import React, { useState, useEffect } from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet, ScrollView, Alert } from 'react-native';
 import { Audio } from 'expo-av';
@@ -11,35 +12,35 @@ import rightEyeIcon from '@/assets/images/righteye-icon.png';
 const snellenDigitChart = [
   { line: '2', questions: [
     { question: 'What is the number being displayed first line of the chart?', answer: '2' },
-  ], score: "20/200" },
+  ], score: "6/60" },
   { line: '5 0', questions: [
     { question: 'What is the first number being displayed on the second line of the chart?', answer: '5' },
     { question: 'What is the last number being displayed on the second line of the chart?',  answer: '0' },
-  ], score: "20/100" },
+  ], score: "6/30" },
   { line: '3 6 4', questions: [
     { question: 'What is the last number being displayed on the third line of the chart?',  answer: '4' },
     { question: 'What is the first number being displayed on the third line of the chart?', answer: '3' },
-  ], score: "20/70" },
+  ], score: "6/20" },
   { line: '4 9 5 2', questions: [
     { question: 'What is the number after 9 in the fourth line of the chart?', answer: '5' },
     { question: 'What is the number before 5 in the line of the chart?', answer: '9' },
-  ], score: "20/50" },
+  ], score: "6/15" },
   { line: '6 0 4 9 3', questions: [
     { question: 'What is the number between 0 and 9 in the fifth line of the chart?', answer: '4' },
     { question: 'What is the number between 6 and 4 in the fifth line of the chart?', answer: '0' },
-  ], score: "20/40" },
+  ], score: "6/12" },
   { line: '5 9 3 2 0 6', questions: [
     { question: 'What is the third number in the sixth line of the chart?', answer: '3' },
     { question: 'What is the number after 3 in the sixth line of the chart?', answer: '2' },
-  ], score: "20/30" },
+  ], score: "6/9" },
   { line: '0 4 6 9 5 3 6', questions: [
     { question: 'What is the number between 5 and 6 in the seventh line of the chart?', answer: '3' },
     { question: 'What is the last number in the seventh line of the chart?', answer: '6' },
-  ], score: "20/25" },
+  ], score: "6/8" },
   { line: '4 2 9 7 5 3 8 2', questions: [
     { question: 'What is the number between 9 and 5 in the above eighth line of the chart?', answer: '7' },
     { question: 'What is the last number in the eighth line of the chart?', answer: '2' },
-  ], score: "20/20" },
+  ], score: "6/6" },
 ];
 
 const SnellenDigitChartTest = () => {
@@ -117,6 +118,7 @@ const SnellenDigitChartTest = () => {
             test_name: 'Snellen Digit Chart Test',
             score_left_eye: results.leftEye,
             score_right_eye: results.rightEye,
+            mode: 'with speech',
           },
         ]).select();
     
@@ -363,17 +365,49 @@ const SnellenDigitChartTest = () => {
   };
   
 
+  const getResultDescription = (score) => {
+    if (!score) return '';
+  
+    const [numerator, denominator] = score.split('/').map(Number);
+    const ratio = numerator / denominator;
+  
+    let description = '';
+    let color = '#000'; // Default color
+  
+    if (ratio <= 0.1) { // 6/60 or worse
+      description = 'Significant correction needed - Legally blind without correction';
+      color = 'red';
+    } else if (ratio <= 0.2) { // 6/30
+      description = 'Significant correction needed';
+      color = 'orange';
+    } else if (ratio <= 0.33) { // 6/20
+      description = 'Moderate correction needed';
+      color = 'yellow';
+    } else if (ratio <= 0.5) { // 6/15
+      description = 'Mild correction needed';
+      color = 'lightgreen';
+    } else if (ratio <= 0.66) { // 6/12
+      description = 'Near perfect vision';
+      color = 'green';
+    } else if (ratio <= 1) { // 6/9, 6/8, 6/6
+      description = 'Excellent vision';
+      color = 'darkgreen';
+    }
+  
+    return { description, color };
+  };
+  
   const renderResults = () => {
     return (
       <ScrollView contentContainerStyle={styles.resultsContainer}>
-        <Text style={styles.resultHeader}>Visual Acuity Test Results for Snellen Digit Chart</Text>
+        <Text style={styles.resultHeader}>Visual Acuity Test Results for Snellen Chart</Text>
         <View style={styles.eyeResultContainer}>
           <Text style={styles.eyeTitle}>Left Eye</Text>
           <Text style={styles.resultText}>
             Score: {results.leftEye}
           </Text>
-          <Text style={styles.resultDescription}>
-            {getResultDescription(results.leftEye)}
+          <Text style={[styles.resultDescription, { color: getResultDescription(results.leftEye).color }]}>
+            {getResultDescription(results.leftEye).description}
           </Text>
         </View>
         <View style={styles.eyeResultContainer}>
@@ -381,36 +415,12 @@ const SnellenDigitChartTest = () => {
           <Text style={styles.resultText}>
             Score: {results.rightEye}
           </Text>
-          <Text style={styles.resultDescription}>
-            {getResultDescription(results.rightEye)}
+          <Text style={[styles.resultDescription, { color: getResultDescription(results.rightEye).color }]}>
+            {getResultDescription(results.rightEye).description}
           </Text>
         </View>
       </ScrollView>
     );
-  };
-  const getResultDescription = (score) => {
-    if (!score) return '';
-  
-    // Parse the fraction (e.g., "20/200" -> ratio of 20/200 = 0.1)
-    const [numerator, denominator] = score.split('/').map(Number);
-    const ratio = numerator / denominator;
-  
-    // Define vision categories based on Snellen score ratios
-    if (ratio <= 0.1) { // 20/200 or worse
-      return 'Significant correction needed - Legally blind without correction';
-    } else if (ratio <= 0.2) { // 20/100
-      return 'Significant correction needed';
-    } else if (ratio <= 0.33) { // 20/60
-      return 'Moderate correction needed';
-    } else if (ratio <= 0.5) { // 20/40
-      return 'Mild correction needed';
-    } else if (ratio <= 0.67) { // 20/30
-      return 'Minor correction may be needed';
-    } else if (ratio >= 1.0) { // 20/20 or better
-      return 'Normal vision range';
-    } else {
-      return 'Vision slightly below normal';
-    }
   };
 
   return (

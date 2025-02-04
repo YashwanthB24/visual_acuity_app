@@ -1,3 +1,4 @@
+  //Animals Chart Test without speech
   import React, { useState, useEffect  } from 'react';
   import { View, Text, Image, TouchableOpacity, StyleSheet, ScrollView, Alert } from 'react-native';
   import { Audio } from 'expo-av';
@@ -11,35 +12,35 @@
   const snellenDigitChart = [
     { line: '1', questions: [
       { question: 'What is the first animal on the chart?', answer: 'horse' },
-    ], score: "20/200" },
+    ], score: "6/60" },
     { line: '2', questions: [
       { question: 'What is the last animal on the second line of the chart?', answer: 'rabbit' },
       { question: 'What is the first animal on the second line of the chart?', answer: 'giraffe' },
-    ], score: "20/100" },
+    ], score: "6/30" },
     { line: '3', questions: [
       { question: 'What is the animal at the center of third line of the chart?', answer: 'dog' },
       { question: 'What is the last animal on the third line of the chart?', answer: 'goat' },
-    ], score: "20/70" },
+    ], score: "6/20" },
     { line: '4', questions: [
       { question: 'What is the second animal on the fourth line of the chart?',  answer: 'rabbit' },
       { question: 'What is the first animal on the fourth line of the chart?',  answer: 'cat' },
-    ], score: "20/50" },
+    ], score: "6/15" },
     { line: '5', questions: [
       { question: 'What is present at the center of fifth line of the chart?',  answer: 'bird' },
       { question: 'What is the last animal on the fifth line of the chart?',  answer: 'seahorse' },
-    ], score: "20/40" },
+    ], score: "6/12" },
     { line: '6', questions: [
       { question: 'Which animal is present between the bird and the rabbit on the sixth line of the chart?', answer: 'goat' },
       { question: 'What is the first animal on the sixth line of the chart?', answer: 'horse' },
-    ], score: "20/30" },
+    ], score: "6/9" },
     { line: '7', questions: [
       { question: 'Which animal is present to the right of the cat on the seventh line of the chart?', answer: 'dog' },
       { question: 'Which animal is present between the rabbit and the seahorse on the seventh line of the chart?', answer: 'goat' },
-    ], score: "20/25" },
+    ], score: "6/8" },
     { line: '8', questions: [
       { question: 'Which animal is present between the dog and the horse on the eighth line of the chart?', answer: 'elephant' },
       { question: 'Which animal is present to the left of the giraffe on the eighth line of the chart?', answer: 'horse' },
-    ], score: "20/20" },
+    ], score: "6/6" },
   ];
 
   const AnimalsChartTest = () => {
@@ -117,6 +118,7 @@
           test_name: 'Snellen Chart Test',
           score_left_eye: results.leftEye,
           score_right_eye: results.rightEye,
+          mode: 'with speech',
         },
       ]).select();
   
@@ -360,17 +362,49 @@
     };
     
 
+    const getResultDescription = (score) => {
+      if (!score) return '';
+    
+      const [numerator, denominator] = score.split('/').map(Number);
+      const ratio = numerator / denominator;
+    
+      let description = '';
+      let color = '#000'; // Default color
+    
+      if (ratio <= 0.1) { // 6/60 or worse
+        description = 'Significant correction needed - Legally blind without correction';
+        color = 'red';
+      } else if (ratio <= 0.2) { // 6/30
+        description = 'Significant correction needed';
+        color = 'orange';
+      } else if (ratio <= 0.33) { // 6/20
+        description = 'Moderate correction needed';
+        color = 'yellow';
+      } else if (ratio <= 0.5) { // 6/15
+        description = 'Mild correction needed';
+        color = 'lightgreen';
+      } else if (ratio <= 0.66) { // 6/12
+        description = 'Near perfect vision';
+        color = 'green';
+      } else if (ratio <= 1) { // 6/9, 6/8, 6/6
+        description = 'Excellent vision';
+        color = 'darkgreen';
+      }
+    
+      return { description, color };
+    };
+    
     const renderResults = () => {
       return (
         <ScrollView contentContainerStyle={styles.resultsContainer}>
-          <Text style={styles.resultHeader}>Visual Acuity Test Results for Animals Chart</Text>
+          <Text style={styles.resultHeader}>Visual Acuity Test Results for Snellen Chart</Text>
           <View style={styles.eyeResultContainer}>
             <Text style={styles.eyeTitle}>Left Eye</Text>
             <Text style={styles.resultText}>
               Score: {results.leftEye}
             </Text>
-            <Text style={styles.resultDescription}>
-              {getResultDescription(results.leftEye)}
+            <Text style={[styles.resultDescription, { color: getResultDescription(results.leftEye).color }]}>
+              {getResultDescription(results.leftEye).description}
             </Text>
           </View>
           <View style={styles.eyeResultContainer}>
@@ -378,36 +412,12 @@
             <Text style={styles.resultText}>
               Score: {results.rightEye}
             </Text>
-            <Text style={styles.resultDescription}>
-              {getResultDescription(results.rightEye)}
+            <Text style={[styles.resultDescription, { color: getResultDescription(results.rightEye).color }]}>
+              {getResultDescription(results.rightEye).description}
             </Text>
           </View>
         </ScrollView>
       );
-    };
-    const getResultDescription = (score) => {
-      if (!score) return '';
-    
-      // Parse the fraction (e.g., "20/200" -> ratio of 20/200 = 0.1)
-      const [numerator, denominator] = score.split('/').map(Number);
-      const ratio = numerator / denominator;
-    
-      // Define vision categories based on Snellen score ratios
-      if (ratio <= 0.1) { // 20/200 or worse
-        return 'Significant correction needed - Legally blind without correction';
-      } else if (ratio <= 0.2) { // 20/100
-        return 'Significant correction needed';
-      } else if (ratio <= 0.33) { // 20/60
-        return 'Moderate correction needed';
-      } else if (ratio <= 0.5) { // 20/40
-        return 'Mild correction needed';
-      } else if (ratio <= 0.67) { // 20/30
-        return 'Minor correction may be needed';
-      } else if (ratio >= 1.0) { // 20/20 or better
-        return 'Normal vision range';
-      } else {
-        return 'Vision slightly below normal';
-      }
     };
 
     return (

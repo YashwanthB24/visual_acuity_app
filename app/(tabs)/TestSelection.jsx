@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   Image,
   ScrollView,
+  Modal,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 
@@ -13,8 +14,36 @@ import { useRouter } from 'expo-router';
 import shortsightednessImage from '@/assets/images/shortsightedness.png';
 import longsightednessImage from '@/assets/images/longsightedness.png';
 
-export default function TestSelection() {
+const TestSelection = () => {
   const router = useRouter();
+  const [modalVisible, setModalVisible] = useState(false);
+  const [selectedTest, setSelectedTest] = useState(null);
+
+  const navigateToTest = (testType, mode) => {
+    let path = '';
+
+    if (testType === 'shortsightedness') {
+      path =
+        mode === 'speech'
+          ? '/ShortsightednessTest'
+          : '/ShortsightednessTestOptions';
+    } else {
+      path =
+        mode === 'speech' ? '/JaegerChartTest' : '/JaegerChartTestOptions';
+    }
+
+    router.push(path);
+  };
+
+  const handleTestSelection = (testType) => {
+    setSelectedTest(testType);
+    setModalVisible(true);
+  };
+
+  const closeModal = () => {
+    setModalVisible(false);
+    setSelectedTest(null);
+  };
 
   return (
     <ScrollView contentContainerStyle={styles.scrollContainer}>
@@ -38,9 +67,11 @@ export default function TestSelection() {
             </Text>
             <TouchableOpacity
               style={styles.selectButton}
-              onPress={() => router.push('/ShortsightednessTest')}
+              onPress={() => handleTestSelection('shortsightedness')}
             >
-              <Text style={styles.buttonText}>Select Shortsightedness Test</Text>
+              <Text style={styles.buttonText}>
+                Select Shortsightedness Test
+              </Text>
             </TouchableOpacity>
           </View>
 
@@ -53,16 +84,63 @@ export default function TestSelection() {
             </Text>
             <TouchableOpacity
               style={styles.selectButton}
-              onPress={() => router.push('/JaegerChartTest')}
+              onPress={() => handleTestSelection('longsightedness')}
             >
-              <Text style={styles.buttonText}>Select Longsightedness Test</Text>
+              <Text style={styles.buttonText}>
+                Select Longsightedness Test
+              </Text>
             </TouchableOpacity>
           </View>
         </View>
       </View>
+
+      {/* Custom Modal for Test Mode Selection */}
+      <Modal
+        animationType="slide"
+        transparent
+        visible={modalVisible}
+        onRequestClose={closeModal}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <Text style={styles.modalTitle}>Choose Test Mode</Text>
+            <Text style={styles.modalText}>
+              Would you like to take the test with or without speech
+              recognition?
+            </Text>
+
+            <TouchableOpacity
+              style={styles.modalButton}
+              onPress={() => {
+                closeModal();
+                navigateToTest(selectedTest, 'text');
+              }}
+            >
+              <Text style={styles.modalButtonText}>Without Speech</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.modalButton}
+              onPress={() => {
+                closeModal();
+                navigateToTest(selectedTest, 'speech');
+              }}
+            >
+              <Text style={styles.modalButtonText}>With Speech</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.modalButton, styles.modalCancelButton]}
+              onPress={closeModal}
+            >
+              <Text style={styles.modalButtonText}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </ScrollView>
   );
-}
+};
 
 const styles = StyleSheet.create({
   scrollContainer: {
@@ -70,20 +148,23 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#F5F7FA',
     paddingBottom: 20,
   },
   header: {
     backgroundColor: '#0057B7',
     width: '100%',
-    height: 200,
+    height: 180,
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 20,
+    borderBottomLeftRadius: 30,
+    borderBottomRightRadius: 30,
+    elevation: 5,
   },
   headerTitle: {
     color: '#fff',
-    fontSize: 24,
+    fontSize: 26,
     fontWeight: 'bold',
     textAlign: 'center',
   },
@@ -91,7 +172,7 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     textAlign: 'center',
-    marginTop: 10,
+    marginTop: 8,
   },
   cardContainer: {
     paddingHorizontal: 10,
@@ -99,18 +180,18 @@ const styles = StyleSheet.create({
   },
   card: {
     backgroundColor: '#fff',
-    paddingVertical: 10,
+    paddingVertical: 15,
     paddingHorizontal: 20,
     borderRadius: 15,
     marginBottom: 15,
-    elevation: 2,
+    elevation: 4,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    shadowOpacity: 0.15,
+    shadowRadius: 5,
     width: '95%',
     alignSelf: 'center',
-    minHeight: 120,
+    minHeight: 140,
   },
   cardTitle: {
     fontSize: 18,
@@ -121,13 +202,13 @@ const styles = StyleSheet.create({
   },
   cardSubtitle: {
     fontSize: 14,
-    color: '#555',
+    color: '#666',
     textAlign: 'center',
     marginBottom: 15,
   },
   testImage: {
-    width: 80,
-    height: 80,
+    width: 90,
+    height: 90,
     marginBottom: 10,
     alignSelf: 'center',
   },
@@ -143,4 +224,49 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
   },
+  // Modal Styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContainer: {
+    width: '80%',
+    backgroundColor: '#fff',
+    borderRadius: 15,
+    paddingVertical: 20,
+    paddingHorizontal: 25,
+    elevation: 10,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#0057B7',
+    marginBottom: 15,
+    textAlign: 'center',
+  },
+  modalText: {
+    fontSize: 16,
+    color: '#444',
+    textAlign: 'center',
+    marginBottom: 25,
+  },
+  modalButton: {
+    backgroundColor: '#0057B7',
+    paddingVertical: 12,
+    borderRadius: 25,
+    alignItems: 'center',
+    marginBottom: 15,
+  },
+  modalCancelButton: {
+    backgroundColor: '#888',
+  },
+  modalButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
 });
+
+export default TestSelection;

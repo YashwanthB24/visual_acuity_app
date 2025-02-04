@@ -1,9 +1,18 @@
 //Jaeger Chart Test
 import React, { useState, useEffect  } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Alert } from 'react-native';
+import { 
+  View, 
+  Text, 
+  TouchableOpacity, 
+  StyleSheet, 
+  ScrollView, 
+  Alert,
+  TextInput  // Added for text input
+} from 'react-native';
 import { Audio } from 'expo-av';
 import axios from 'axios';
 import { supabase } from '../supabase';
+
 // Jaeger chart data - starting from largest text (No. 11) to smallest (No. 1)
 const jaegerChartData = [
   { 
@@ -72,7 +81,7 @@ const jaegerChartData = [
   }
 ];
 
-const JaegerChartTest = () => {
+const JaegerChartTestOptions = () => { 
   // Test state
   const [currentBlock, setCurrentBlock] = useState(0);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -81,12 +90,10 @@ const JaegerChartTest = () => {
   const [result, setResult] = useState(null);
   const [showInstructions, setShowInstructions] = useState(true);
 
-  // Speech recognition state
-  const [recording, setRecording] = useState(null);
+  // Changed: Instead of speech recognition, we now allow text input for answers
   const [transcribedText, setTranscribedText] = useState('');
-  const [isRecording, setIsRecording] = useState(false);
-  const [showConfirmation, setShowConfirmation] = useState(false);
-  const [isProcessing, setIsProcessing] = useState(false);
+  // Removed states related to speech: recording, isRecording, showConfirmation, isProcessing
+
   const [profileId, setProfileId] = useState(null);
 
   useEffect(() => {
@@ -117,25 +124,24 @@ const JaegerChartTest = () => {
       fetchProfileId();
     }, []);
 
-
-      const saveTestResults = async () => {
+    const saveTestResults = async () => {
         if (!profileId) {
           console.error('Error: Profile ID is null or undefined.');
           Alert.alert('Error', 'Profile ID not found. Cannot save test results.');
           return;
         }
       
-        // Check if both eye scores are present
+        // Check if the test result is present
         if (result === null) {
           console.error('Incomplete test results', result);
-          Alert.alert('Error', 'Test is incomplete. Please ensure both eyes have been tested.');
+          Alert.alert('Error', 'Test is incomplete.');
           return;
         }
       
         try {
           const testDate = new Date().toISOString().split('T')[0];
           const testTime = new Date().toLocaleTimeString();
-    
+      
           const { data, error } = await supabase.from('long_sightedness_tests').insert([
             {
               profile_id: profileId,
@@ -143,7 +149,7 @@ const JaegerChartTest = () => {
               test_time: testTime,
               test_name: 'Jaeger Chart Test',
               score: result,
-              mode: 'with speech',
+              mode: 'without speech',  // Specify mode here (change to 'speech' if applicable)
             },
           ]).select();
       
@@ -159,6 +165,7 @@ const JaegerChartTest = () => {
           Alert.alert('Error', 'An unexpected error occurred. Please try again.');
         }
       };
+      
 
   const processTranscribedText = (text) => {
     if (!text) return '';
@@ -200,59 +207,7 @@ const JaegerChartTest = () => {
     return processedText;
   };
 
-  const startRecording = async () => {
-    setTranscribedText("");
-    setIsProcessing(false);
-    try {
-      await Audio.requestPermissionsAsync();
-      const { recording } = await Audio.Recording.createAsync(
-        Audio.RecordingOptionsPresets.HIGH_QUALITY
-      );
-      setRecording(recording);
-      setIsRecording(true);
-    } catch (err) {
-      console.error('Failed to start recording', err);
-    }
-  };
-
-  const stopRecording = async () => {
-    if (recording) {
-      setIsProcessing(true);
-      setIsRecording(false);
-      await recording.stopAndUnloadAsync();
-      const uri = recording.getURI();
-      if (uri) {
-        uploadAudio(uri);
-      }
-      setRecording(null);
-    }
-  };
-
-  const uploadAudio = async (uri) => {
-    const formData = new FormData();
-    formData.append('audio_data', {
-      uri,
-      type: 'audio/wav',
-      name: 'recording.wav',
-    });
-
-    try {
-      const response = await axios.post('https://gazelle-distinct-jay.ngrok-free.app/transcribe', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
-      
-      const rawTranscribedText = response.data?.text || response.data || '';
-      const processedText = processTranscribedText(rawTranscribedText);
-      
-      setTranscribedText(processedText);
-      setShowConfirmation(true);
-    } catch (error) {
-      console.error('Error uploading audio:', error);
-      setTranscribedText('');
-    }
-  };
+  // Removed startRecording, stopRecording, and uploadAudio functions as they are no longer needed
 
   const handleAnswer = (answer) => {
     const currentQuestion = jaegerChartData[currentBlock].questions[currentQuestionIndex];
@@ -285,21 +240,16 @@ const JaegerChartTest = () => {
       }
     }
   };
-    useEffect(() => {
-      if (testComplete && result) {
-        saveTestResults();
-      }
-    }, [testComplete, result]);
 
-    
+  useEffect(() => {
+    if (testComplete && result) {
+      saveTestResults();
+    }
+  }, [testComplete, result]);
+
+  // Modified: Now handles typed answer submission directly
   const handleSubmitAnswer = () => {
-    setShowConfirmation(false);
     handleAnswer(transcribedText);
-    setTranscribedText('');
-  };
-
-  const handleRecordAgain = () => {
-    setShowConfirmation(false);
     setTranscribedText('');
   };
 
@@ -338,59 +288,74 @@ const JaegerChartTest = () => {
         <Text style={styles.sizeText}>Size: {jaegerChartData[currentBlock].size}</Text>
         <Text style={styles.question}>{currentQuestion.question}</Text>
         
-        {showConfirmation ? (
-          <View style={styles.confirmationContainer}>
-            <Text style={styles.transcribedText}>Your answer: {transcribedText}</Text>
-            <View style={styles.confirmationButtons}>
-              <TouchableOpacity style={styles.confirmButton} onPress={handleSubmitAnswer}>
-                <Text style={styles.buttonText}>Submit</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.confirmButton} onPress={handleRecordAgain}>
-                <Text style={styles.buttonText}>Record Again</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        ) : (
-          <TouchableOpacity
-            style={[styles.recordButton, isRecording && styles.recordingButton]}
-            onPress={isRecording ? stopRecording : startRecording}
-          >
-            <Text style={styles.buttonText}>
-              {isRecording ? "Stop Recording" : "Start Recording"}
-            </Text>
+        {/* Modified: Instead of speech recording UI, we now show a text input for the answer */}
+        <View style={styles.inputContainer}>
+          <TextInput
+            style={styles.textInput}
+            placeholder="Type your answer here"
+            value={transcribedText}
+            onChangeText={setTranscribedText}
+          />
+          <TouchableOpacity style={styles.submitButton} onPress={handleSubmitAnswer}>
+            <Text style={styles.buttonText}>Submit Answer</Text>
           </TouchableOpacity>
-        )}
+        </View>
 
-        {isProcessing && !showConfirmation && (
-          <Text style={styles.waitMessage}>Please wait a few seconds for the transcription...</Text>
-        )}
       </View>
     );
   };
 
-  const getResultDescription = (size) => {
+  // Helper: Get result description based on score value
+const getResultDescription = (size) => {
     const sizeValue = parseFloat(size);
     if (sizeValue <= 1.00) return "Normal near vision";
     if (sizeValue <= 1.50) return "Mild near vision difficulty";
     if (sizeValue <= 2.00) return "Moderate near vision difficulty";
     return "Significant near vision difficulty";
   };
-
+  
+  // Helper: Get color based on the score for visual extremeness
+  const getResultColor = (size) => {
+    const sizeValue = parseFloat(size);
+    if (sizeValue <= 1.00) return '#4CAF50';       // Green for normal
+    if (sizeValue <= 1.50) return '#2196F3';       // Blue for mild difficulty
+    if (sizeValue <= 2.00) return '#FF9800';       // Orange for moderate difficulty
+    return '#F44336';                            // Red for significant difficulty
+  };
+  
   const renderResults = () => {
+    const resultColor = getResultColor(result);
+    const description = getResultDescription(result);
+  
+    // Debug log to check what colors are being computed
+    console.log("Result:", result, "Color:", resultColor, "Description:", description);
+  
     return (
       <ScrollView contentContainerStyle={styles.resultsContainer}>
         <Text style={styles.resultHeader}>Jaeger Chart Test Results</Text>
-        <View style={styles.resultContainer}>
-          <Text style={styles.resultText}>
+        <View
+          style={[
+            styles.resultContainer,
+            {
+              borderColor: resultColor,
+              borderWidth: 2,
+              borderRadius: 10,
+              padding: 20,
+              backgroundColor: resultColor + "33", // Append 33 (hex) for a transparent background
+            },
+          ]}
+        >
+          <Text style={[styles.resultText, { color: resultColor, fontWeight: 'bold' }]}>
             Smallest readable text size: {result}
           </Text>
-          <Text style={styles.resultDescription}>
-            {getResultDescription(result)}
+          <Text style={[styles.resultDescription, { color: resultColor, fontWeight: 'bold' }]}>
+            {description}
           </Text>
         </View>
       </ScrollView>
     );
   };
+  
 
   return (
     <View style={styles.container}>
@@ -528,6 +493,30 @@ const styles = StyleSheet.create({
     marginTop: 20,
     textAlign: 'center',
   },
+  // New styles for text input
+  inputContainer: {
+    width: '80%',
+    marginTop: 20,
+    alignItems: 'center',
+  },
+  textInput: {
+    borderColor: '#0057B7',
+    borderWidth: 1,
+    borderRadius: 25,
+    width: '100%',
+    paddingHorizontal: 15,
+    paddingVertical: 10,
+    fontSize: 16,
+    marginBottom: 15,
+  },
+  submitButton: {
+    backgroundColor: '#0057B7',
+    paddingVertical: 15,
+    paddingHorizontal: 30,
+    borderRadius: 25,
+    width: '100%',
+    alignItems: 'center',
+  },
 });
 
-export default JaegerChartTest;
+export default JaegerChartTestOptions;

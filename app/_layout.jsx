@@ -48,14 +48,26 @@ export default function Layout() {
         <Stack.Screen name="ShortsightednessTest" options={{ headerShown: false }} />
         <Stack.Screen name="LongsightednessTest" options={{ headerShown: false }} />
 
+        <Stack.Screen name="ShortsightednessTestOptions" options={{ headerShown: false }} />
+
         <Stack.Screen name="SnellenChartTest" options={{ headerShown: false }} />
         <Stack.Screen name="SnellenDigitChartTest" options={{ headerShown: false }} />
         <Stack.Screen name="TumblingEChartTest" options={{ headerShown: false }} />
         <Stack.Screen name="PattiPicsChartTest" options={{ headerShown: false }} />
         <Stack.Screen name="AnimalsChartTest" options={{ headerShown: false }} />
+
         <Stack.Screen name="JaegerChartTest" options={{ headerShown: false }} />
         <Stack.Screen name="MNReadChartTest" options={{ headerShown: false }} />
+        
         <Stack.Screen name="TestHistory" options={{ headerShown: false }} />
+
+        <Stack.Screen name="JaegerChartTestOptions" options={{ headerShown: false }} />
+
+        <Stack.Screen name="SnellenChartTestOptions" options={{ headerShown: false }} />
+        <Stack.Screen name="SnellenDigitChartTestOptions" options={{ headerShown: false }} />
+        <Stack.Screen name="TumblingEChartTestOptions" options={{ headerShown: false }} />
+        <Stack.Screen name="PattiPicsChartTestOptions" options={{ headerShown: false }} />
+        <Stack.Screen name="AnimalsChartTestOptions" options={{ headerShown: false }} />
 
         <Stack.Screen name="EyeExerciseVideos" options={{ headerShown: false, title: 'Eye Exercises' }} />
         <Stack.Screen name="HealthyFoodsPage" options={{ headerShown: false, title: 'Eye Exercises' }} />

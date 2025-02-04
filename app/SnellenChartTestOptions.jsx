@@ -1,10 +1,7 @@
 //Snellen Chart
 import React, { useState, useEffect } from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet, ScrollView, Alert } from 'react-native';
-import { Audio } from 'expo-av';
-import axios from 'axios';
 import { supabase } from '../supabase';
-
 
 // Import images for left and right eye icons
 import leftEyeIcon from '@/assets/images/lefteye-icon.png';
@@ -45,7 +42,7 @@ const snellenDigitChart = [
   ], score: '6/6' },
 ];
 
-const SnellenChartTest = () => {
+const SnellenChartTestOptions = () => { 
   // Test state
   const [currentLine, setCurrentLine] = useState(0);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -54,13 +51,6 @@ const SnellenChartTest = () => {
   const [firstWrongPower, setFirstWrongPower] = useState(null);
   const [testComplete, setTestComplete] = useState(false);
   const [results, setResults] = useState({ leftEye: null, rightEye: null });
-
-  // Speech recognition state
-  const [recording, setRecording] = useState(null);
-  const [transcribedText, setTranscribedText] = useState('');
-  const [isRecording, setIsRecording] = useState(false);
-  const [showConfirmation, setShowConfirmation] = useState(false);
-  const [isProcessing, setIsProcessing] = useState(false); // New state to track processing status
 
   const [profileId, setProfileId] = useState(null);
 
@@ -120,7 +110,7 @@ const SnellenChartTest = () => {
           test_name: 'Snellen Chart Test',
           score_left_eye: results.leftEye,
           score_right_eye: results.rightEye,
-          mode: 'with speech',
+          mode: 'without speech',
         },
       ]).select();
   
@@ -137,126 +127,11 @@ const SnellenChartTest = () => {
     }
   };
   
-
-  const processTranscribedText = (text) => {
-    if (!text) return '';
-  
-    // Remove non-alphanumeric characters
-    const cleanedText = text.replace(/[^a-zA-Z0-9]/g, '').trim();
-  
-    // Map common misrecognized words to numbers
-    const numberMappings = {
-      // E
-      'e': 'E', 'ee': 'E', 'eh': 'E', 'eeh': 'E', 'ehh': 'E', 'eah': 'E', 'ey': 'E', 'ay': 'E','you': 'E','yeah':'E','mmm':'E','eat':'E','mm':'E',
-
-      // F
-      'f': 'F', 'eff': 'F', 'fe': 'F', 'ff': 'F', 'ef': 'F', 'fah': 'F', 'fa': 'F','if':'F',
-
-      // P
-      'p': 'P', 'pee': 'P', 'pea': 'P', 'pi': 'P', 'puh': 'P', 'pea': 'P', 'pee-ah': 'P','be':'P','bee':'P',
-
-      // T
-      't': 'T', 'tee': 'T', 'tea': 'T', 'te': 'T', 'tuh': 'T', 'tay': 'T', 'ta': 'T',
-
-      // O
-      'o': 'O', 'oh': 'O', 'zero': 'O', 'aw': 'O', 'ah': 'O', 'ooh': 'O', 'ohh': 'O', 'oah': 'O',
-
-      // Z
-      'z': 'Z', 'zee': 'Z', 'zed': 'Z', 'zuh': 'Z', 'zee-ah': 'Z', 'zah': 'Z', 'zahh': 'Z',
-
-      // L
-      'l': 'L', 'el': 'L', 'ell': 'L', 'le': 'L', 'el-oh': 'L', 'luh': 'L', 'ell-ah': 'L',
-
-      // D
-      'd': 'D', 'dee': 'D', 'de': 'D', 'doh': 'D', 'duh': 'D', 'di': 'D', 'dah': 'D', 'deh': 'D','deet': 'D','the': 'D',
-
-      // C
-      'c': 'C', 'see': 'C', 'sea': 'C', 'ce': 'C', 'suh': 'C', 'seh': 'C', 'ceh': 'C', 'cah': 'C',
-    };
-  
-    // Convert cleaned text to lowercase and check for mappings
-    const processedText = cleanedText.toLowerCase();
-    return numberMappings[processedText] || cleanedText;
-  };
-  
-
-  const startRecording = async () => {
-    // Reset previous transcriptions and hide the wait message on new recording
-    setTranscribedText("");
-    setIsProcessing(false); // Reset processing state for a new recording
-    try {
-      await Audio.requestPermissionsAsync();
-      const { recording } = await Audio.Recording.createAsync(
-        Audio.RecordingOptionsPresets.HIGH_QUALITY
-      );
-      setRecording(recording);
-      setIsRecording(true);
-    } catch (err) {
-      console.error('Failed to start recording', err);
-    }
-  };
-
-  const stopRecording = async () => {
-    
-    if (recording) {
-      setIsProcessing(true); // Set processing to true when recording stops
-      setIsRecording(false);
-      await recording.stopAndUnloadAsync();
-      const uri = recording.getURI();
-      if (uri) {
-        uploadAudio(uri);
-      }
-      setRecording(null);
-    }
-  };
-
-  const uploadAudio = async (uri) => {
-    const formData = new FormData();
-    formData.append('audio_data', {
-      uri,
-      type: 'audio/wav',
-      name: 'recording.wav',
-    });
-
-    try {
-      const response = await axios.post('https://gazelle-distinct-jay.ngrok-free.app/transcribe', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
-      
-      const rawTranscribedText = response.data?.text || response.data || '';
-      const processedText = processTranscribedText(rawTranscribedText);
-      
-      setTranscribedText(processedText);
-      setShowConfirmation(true);
-      
-      console.log('Raw transcribed text:', rawTranscribedText);
-      console.log('Processed text:', processedText);
-    } catch (error) {
-      console.error('Error uploading audio:', error);
-      setTranscribedText('');
-    }
-  };
-
-  const handleSubmitAnswer = () => {
-    setShowConfirmation(false);
-    handleAnswer(transcribedText);
-    setTranscribedText('');
-  };
-
-  const handleRecordAgain = () => {
-    setShowConfirmation(false);
-    setTranscribedText('');
-  };
-
-  const handleAnswer = (answer) => {
+  const handleAnswer = (selectedAnswer) => {
     const currentQuestion = snellenDigitChart[currentLine].questions[currentQuestionIndex];
-    const processedAnswer = processTranscribedText(answer);
     const correctAnswer = currentQuestion.answer;
   
-  
-    if (processedAnswer === correctAnswer) {
+    if (selectedAnswer === correctAnswer) {
       // Correct answer
       setConsecutiveMistakes(0);
       
@@ -326,7 +201,7 @@ const SnellenChartTest = () => {
       }
     }
   };
-  
+
   // Add an effect to trigger saveTestResults when test is complete
   useEffect(() => {
     if (testComplete && results.leftEye && results.rightEye) {
@@ -334,11 +209,24 @@ const SnellenChartTest = () => {
     }
   }, [testComplete, results]);
   
-  
-  
+  // Returns an array of answer options (one correct answer and two other options).
+  const getOptions = (correctAnswer) => {
+    const optionsPool = ['E','F','T','O','Z','L','D','C','P'];
+    // Filter out the correct answer from pool.
+    const filteredPool = optionsPool.filter(letter => letter !== correctAnswer);
+    // Shuffle the filtered pool.
+    const shuffledPool = filteredPool.sort(() => 0.5 - Math.random());
+    // Select two random options.
+    const randomOptions = shuffledPool.slice(0,3);
+    // Combine with the correct answer.
+    const options = [correctAnswer, ...randomOptions];
+    // Shuffle the options array before returning.
+    return options.sort(() => 0.5 - Math.random());
+  };
 
   const renderCurrentLine = () => {
     const currentQuestion = snellenDigitChart[currentLine].questions[currentQuestionIndex];
+    const options = getOptions(currentQuestion.answer);
 
     return (
       <View style={styles.contentContainer}>
@@ -352,62 +240,21 @@ const SnellenChartTest = () => {
         </Text>
         <Text style={styles.question}>{currentQuestion.question}</Text>
         
-        {showConfirmation ? (
-          <View style={styles.confirmationContainer}>
-            <Text style={styles.transcribedText}>Your answer: {transcribedText}</Text>
-            <View style={styles.confirmationButtons}>
-              <TouchableOpacity style={styles.confirmButton} onPress={handleSubmitAnswer}>
-                <Text style={styles.buttonText}>Submit</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.confirmButton} onPress={handleRecordAgain}>
-                <Text style={styles.buttonText}>Record Again</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        ) : (
-          <TouchableOpacity
-            style={[styles.recordButton, isRecording && styles.recordingButton]}
-            onPress={isRecording ? stopRecording : startRecording}
-          >
-            <Text style={styles.buttonText}>
-              {isRecording ? "Stop Recording" : "Start Recording"}
-            </Text>
-          </TouchableOpacity>
-        )}
-
-        {isProcessing && !showConfirmation && (
-          <Text style={styles.waitMessage}>Please wait a few seconds for the transcription...</Text>
-        )}
+        <View style={styles.optionsContainer}>
+          {options.map((option, index) => (
+            <TouchableOpacity
+              key={index}
+              style={styles.optionButton}
+              onPress={() => handleAnswer(option)}
+            >
+              <Text style={styles.optionButtonText}>{option}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
       </View>
     );
   };
   
-
-  const renderResults = () => {
-    return (
-      <ScrollView contentContainerStyle={styles.resultsContainer}>
-        <Text style={styles.resultHeader}>Visual Acuity Test Results for Snellen Chart</Text>
-        <View style={styles.eyeResultContainer}>
-          <Text style={styles.eyeTitle}>Left Eye</Text>
-          <Text style={styles.resultText}>
-            Score: {results.leftEye}
-          </Text>
-          <Text style={[styles.resultDescription, { color: getResultDescription(results.leftEye).color }]}>
-            {getResultDescription(results.leftEye).description}
-          </Text>
-        </View>
-        <View style={styles.eyeResultContainer}>
-          <Text style={styles.eyeTitle}>Right Eye</Text>
-          <Text style={styles.resultText}>
-            Score: {results.rightEye}
-          </Text>
-          <Text style={[styles.resultDescription, { color: getResultDescription(results.rightEye).color }]}>
-            {getResultDescription(results.rightEye).description}
-          </Text>
-        </View>
-      </ScrollView>
-    );
-  };
   const getResultDescription = (score) => {
     if (!score) return '';
   
@@ -438,6 +285,32 @@ const SnellenChartTest = () => {
     }
   
     return { description, color };
+  };
+
+  const renderResults = () => {
+    return (
+      <ScrollView contentContainerStyle={styles.resultsContainer}>
+        <Text style={styles.resultHeader}>Visual Acuity Test Results for Snellen Chart</Text>
+        <View style={styles.eyeResultContainer}>
+          <Text style={styles.eyeTitle}>Left Eye</Text>
+          <Text style={styles.resultText}>
+            Score: {results.leftEye}
+          </Text>
+          <Text style={[styles.resultDescription, { color: getResultDescription(results.leftEye).color }]}>
+            {getResultDescription(results.leftEye).description}
+          </Text>
+        </View>
+        <View style={styles.eyeResultContainer}>
+          <Text style={styles.eyeTitle}>Right Eye</Text>
+          <Text style={styles.resultText}>
+            Score: {results.rightEye}
+          </Text>
+          <Text style={[styles.resultDescription, { color: getResultDescription(results.rightEye).color }]}>
+            {getResultDescription(results.rightEye).description}
+          </Text>
+        </View>
+      </ScrollView>
+    );
   };
 
   return (
@@ -476,44 +349,22 @@ const styles = StyleSheet.create({
     marginTop: 25,
     marginBottom: 20,
   },
-  recordButton: {
+  optionsContainer: {
+    width: '100%',
+    alignItems: 'center',
+  },
+  optionButton: {
     backgroundColor: '#0057B7',
     paddingVertical: 15,
     paddingHorizontal: 30,
     borderRadius: 25,
-    marginTop: 25,
-    marginBottom: 50,
-    width: '80%',
+    marginTop: 15,
+    width: '60%',
   },
-  recordingButton: {
-    backgroundColor: '#ff4444',
-  },
-  buttonText: {
+  optionButtonText: {
     color: '#fff',
     fontSize: 18,
     textAlign: 'center',
-  },
-  confirmationContainer: {
-    width: '100%',
-    alignItems: 'center',
-    marginTop: 20,
-  },
-  transcribedText: {
-    fontSize: 16,
-    marginBottom: 20,
-    textAlign: 'center',
-  },
-  confirmationButtons: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    width: '100%',
-  },
-  confirmButton: {
-    backgroundColor: '#0057B7',
-    paddingVertical: 12,
-    paddingHorizontal: 25,
-    borderRadius: 25,
-    width: '45%',
   },
   resultsContainer: {
     alignItems: 'center',
@@ -549,4 +400,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default SnellenChartTest;
+export default SnellenChartTestOptions;

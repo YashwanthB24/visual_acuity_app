@@ -9,35 +9,31 @@ export default function Introduction() {
   const router = useRouter();
 
   // Fun facts about vision health
-  const triviaFacts = [
-    "Carrots are rich in beta-carotene, a compound your body converts to vitamin A for healthy eyes.",
-    "Your eyes can distinguish about 10 million different colors!",
-    "Blinking helps keep your eyes moist and provides a brief rest from light exposure.",
-    "The human eye blinks an average of 4.2 million times a year!",
-    "Your retina has over 120 million rods for night vision and 6 million cones for color vision.",
-    "Eating leafy greens like spinach helps reduce the risk of macular degeneration.",
-    "Blue light from screens can cause digital eye strain. Remember the 20-20-20 rule!",
-    "Your eyes process more information than the largest supercomputers!",
-    "Your pupils dilate when you see someone you love!",
-    "Fish like salmon and tuna are rich in omega-3 fatty acids, which are good for eye health.",
-    "Your eyes are the second most complex organ in your body after your brain.",
-    "The cornea is the only part of the human body with no blood supply.",
-    "Your eyes can detect a candle flame 1.7 miles away in perfect darkness.",
-    "Wearing sunglasses helps protect your eyes from harmful UV rays.",
-    "Drinking plenty of water helps keep your eyes hydrated and prevents dryness.",
-  ];
+  // const triviaFacts = [
+  //   "Carrots are rich in beta-carotene, a compound your body converts to vitamin A for healthy eyes.",
+  //   "Your eyes can distinguish about 10 million different colors!",
+  //   "Blinking helps keep your eyes moist and provides a brief rest from light exposure.",
+  //   "The human eye blinks an average of 4.2 million times a year!",
+  //   "Your retina has over 120 million rods for night vision and 6 million cones for color vision.",
+  //   "Eating leafy greens like spinach helps reduce the risk of macular degeneration.",
+  //   "Blue light from screens can cause digital eye strain. Remember the 20-20-20 rule!",
+  //   "Your eyes process more information than the largest supercomputers!",
+  //   "Your pupils dilate when you see someone you love!",
+  //   "Fish like salmon and tuna are rich in omega-3 fatty acids, which are good for eye health.",
+  //   "Your eyes are the second most complex organ in your body after your brain.",
+  //   "The cornea is the only part of the human body with no blood supply.",
+  //   "Your eyes can detect a candle flame 1.7 miles away in perfect darkness.",
+  //   "Wearing sunglasses helps protect your eyes from harmful UV rays.",
+  //   "Drinking plenty of water helps keep your eyes hydrated and prevents dryness.",
+  // ];
 
-  // Function to get a new trivia fact
-  const getNextTrivia = () => {
-    setTriviaIndex((prevIndex) => (prevIndex + 1) % triviaFacts.length);
-  };
+  // // Function to get a new trivia fact
+  // const getNextTrivia = () => {
+  //   setTriviaIndex((prevIndex) => (prevIndex + 1) % triviaFacts.length);
+  // };
 
   // Handle start test button
   const handleStartTest = () => {
-    if (!selectedVision || !selectedBlur) {
-      Alert.alert("Incomplete!", "Please answer all the pre-test questions.");
-      return;
-    }
     router.push('/TestSelection');
   };
 
@@ -71,71 +67,16 @@ export default function Introduction() {
         <Text style={styles.cardText}>📱 Hold your device at eye level</Text>
       </View>
 
-      {/* Eye Trivia Section */}
+      {/* Eye Trivia Section
       <View style={styles.card}>
         <Text style={styles.cardTitle}>Did You Know?</Text>
         <Text style={styles.cardText}>{triviaFacts[triviaIndex]}</Text>
         <TouchableOpacity style={styles.nextTriviaButton} onPress={getNextTrivia}>
           <Text style={styles.buttonText}>Next Fact</Text>
         </TouchableOpacity>
-      </View>
+      </View> */}
 
-      {/* Pre-Test Questions Section */}
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>Pre-Test Questions</Text>
-        <Text style={styles.cardText}>How is your vision today?</Text>
-        <View style={styles.buttonGroup}>
-          <TouchableOpacity
-            style={[
-              styles.optionButton,
-              selectedVision === "Good" && styles.selectedOption,
-            ]}
-            onPress={() => setSelectedVision("Good")}
-          >
-            <Text style={styles.buttonText}>Good</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[
-              styles.optionButton,
-              selectedVision === "Fair" && styles.selectedOption,
-            ]}
-            onPress={() => setSelectedVision("Fair")}
-          >
-            <Text style={styles.buttonText}>Fair</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[
-              styles.optionButton,
-              selectedVision === "Poor" && styles.selectedOption,
-            ]}
-            onPress={() => setSelectedVision("Poor")}
-          >
-            <Text style={styles.buttonText}>Poor</Text>
-          </TouchableOpacity>
-        </View>
 
-        <Text style={styles.cardText}>Have you experienced blurry vision recently?</Text>
-        <View style={styles.buttonGroup}>
-          <TouchableOpacity
-            style={[
-              styles.optionButton,
-              selectedBlur === "Yes" && styles.selectedOption,
-            ]}
-            onPress={() => setSelectedBlur("Yes")}
-          >
-            <Text style={styles.buttonText}>Yes</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[
-              styles.optionButton,
-              selectedBlur === "No" && styles.selectedOption,
-            ]}
-            onPress={() => setSelectedBlur("No")}
-          >
-            <Text style={styles.buttonText}>No</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
 
       {/* Start Test Button */}
       <TouchableOpacity style={styles.startTestButton} onPress={handleStartTest}>

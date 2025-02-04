@@ -1,51 +1,63 @@
-//Snellen Chart
+//Snellen Digit Chart
 import React, { useState, useEffect } from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet, ScrollView, Alert } from 'react-native';
-import { Audio } from 'expo-av';
-import axios from 'axios';
 import { supabase } from '../supabase';
-
-
 // Import images for left and right eye icons
 import leftEyeIcon from '@/assets/images/lefteye-icon.png';
 import rightEyeIcon from '@/assets/images/righteye-icon.png';
 
 // Snellen digit chart data
 const snellenDigitChart = [
-  { line: 'E', questions: [
-    { question: 'What is the first letter being displayed on the chart?', answer: 'E' },
-  ], score: '6/60' },
-  { line: 'F P', questions: [
-    { question: 'What is the first letter being displayed on the second line of the chart?',  answer: 'F' },
-    { question: 'What is the last letter being displayed on the second line of the chart?',  answer: 'P' },
-  ], score: '6/30' },
-  { line: 'T O Z', questions: [
-    { question: 'What is the last letter being displayed on the third line of the chart?', answer: 'Z' },
-    { question: 'What is the first letter being displayed on the third line of the chart?', answer: 'T' },
-  ], score: '6/20' },
-  { line: 'L P E D', questions: [
-    { question: 'What is the letter after E in the fourth line of the chart?',  answer: 'D' },
-    { question: 'What is the letter before E in the fourth line of the chart?',  answer: 'P' },
-  ], score: '6/15' },
-  { line: 'P E C F D', questions: [
-    { question: 'What is the letter before E in the fifth line of the chart?',  answer: 'P' },
-    { question: 'What is the letter between E and F in the fifth line of the chart?',  answer: 'C' },
-  ], score: '6/12' },
-  { line: 'E D F C Z P', questions: [
-    { question: 'What is the letter after C in the  sixth line of the chart?', answer: 'Z' },
-    { question: 'What is the third letter in the sixth line of the chart?', answer: 'F' },
-  ], score: '6/9' },
-  { line: 'F E L O P Z D', questions: [
-    { question: 'What is the letter between P and D in the seventh line of the chart?', answer: 'Z' },
-    { question: 'What is the letter after E in the seventh line of the chart?', answer: 'L' },
-  ], score: '6/8' },
-  { line: 'D E F P O T E C', questions: [
-    { question: 'What is the letter between E and P in the eighth line of the chart?', answer: 'F' },
-    { question: 'What is the 4th letter in the eighth line of the chart?', answer: 'P' },
-  ], score: '6/6' },
+  { line: '2', questions: [
+    { question: 'What is the number being displayed first line of the chart?', answer: '2' },
+  ], score: "6/60" },
+  { line: '5 0', questions: [
+    { question: 'What is the first number being displayed on the second line of the chart?', answer: '5' },
+    { question: 'What is the last number being displayed on the second line of the chart?',  answer: '0' },
+  ], score: "6/30" },
+  { line: '3 6 4', questions: [
+    { question: 'What is the last number being displayed on the third line of the chart?',  answer: '4' },
+    { question: 'What is the first number being displayed on the third line of the chart?', answer: '3' },
+  ], score: "6/20" },
+  { line: '4 9 5 2', questions: [
+    { question: 'What is the number after 9 in the fourth line of the chart?', answer: '5' },
+    { question: 'What is the number before 5 in the line of the chart?', answer: '9' },
+  ], score: "6/15" },
+  { line: '6 0 4 9 3', questions: [
+    { question: 'What is the number between 0 and 9 in the fifth line of the chart?', answer: '4' },
+    { question: 'What is the number between 6 and 4 in the fifth line of the chart?', answer: '0' },
+  ], score: "6/12" },
+  { line: '5 9 3 2 0 6', questions: [
+    { question: 'What is the third number in the sixth line of the chart?', answer: '3' },
+    { question: 'What is the number after 3 in the sixth line of the chart?', answer: '2' },
+  ], score: "6/9" },
+  { line: '0 4 6 9 5 3 6', questions: [
+    { question: 'What is the number between 5 and 6 in the seventh line of the chart?', answer: '3' },
+    { question: 'What is the last number in the seventh line of the chart?', answer: '6' },
+  ], score: "6/8" },
+  { line: '4 2 9 7 5 3 8 2', questions: [
+    { question: 'What is the number between 9 and 5 in the above eighth line of the chart?', answer: '7' },
+    { question: 'What is the last number in the eighth line of the chart?', answer: '2' },
+  ], score: "6/6" },
 ];
 
-const SnellenChartTest = () => {
+// Returns an array of answer options (one correct answer and two other options).
+// The options pool is based on numbers 0-9.
+const getOptions = (correctAnswer) => {
+  const optionsPool = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+  // Remove the correct answer from the pool.
+  const filteredPool = optionsPool.filter(item => item !== correctAnswer);
+  // Shuffle the filtered pool.
+  const shuffledPool = filteredPool.sort(() => 0.5 - Math.random());
+  // Select two random options.
+  const randomOptions = shuffledPool.slice(0, 3);
+  // Combine with the correct answer.
+  const options = [correctAnswer, ...randomOptions];
+  // Shuffle the options array before returning.
+  return options.sort(() => 0.5 - Math.random());
+};
+
+const SnellenDigitChartTestOptions = () => {
   // Test state
   const [currentLine, setCurrentLine] = useState(0);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -54,14 +66,6 @@ const SnellenChartTest = () => {
   const [firstWrongPower, setFirstWrongPower] = useState(null);
   const [testComplete, setTestComplete] = useState(false);
   const [results, setResults] = useState({ leftEye: null, rightEye: null });
-
-  // Speech recognition state
-  const [recording, setRecording] = useState(null);
-  const [transcribedText, setTranscribedText] = useState('');
-  const [isRecording, setIsRecording] = useState(false);
-  const [showConfirmation, setShowConfirmation] = useState(false);
-  const [isProcessing, setIsProcessing] = useState(false); // New state to track processing status
-
   const [profileId, setProfileId] = useState(null);
 
   const [lastSuccessfulPower, setLastSuccessfulPower] = useState(snellenDigitChart[0].power);
@@ -71,18 +75,15 @@ const SnellenChartTest = () => {
       try {
         const { data: userResponse } = await supabase.auth.getUser();
         const user = userResponse?.user;
-
         if (!user) {
           Alert.alert('Error', 'User not logged in.');
           return;
         }
-
         const { data: profile, error } = await supabase
           .from('profiles')
           .select('id')
           .eq('user_id', user.id)
           .single();
-
         if (error) throw error;
         setProfileId(profile?.id);
       } catch (error) {
@@ -90,7 +91,6 @@ const SnellenChartTest = () => {
         console.error(error);
       }
     };
-
     fetchProfileId();
   }, []);
 
@@ -100,30 +100,26 @@ const SnellenChartTest = () => {
       Alert.alert('Error', 'Profile ID not found. Cannot save test results.');
       return;
     }
-  
     // Check if both eye scores are present
     if (results.leftEye === null || results.rightEye === null) {
       console.error('Incomplete test results', results);
       Alert.alert('Error', 'Test is incomplete. Please ensure both eyes have been tested.');
       return;
     }
-  
     try {
       const testDate = new Date().toISOString().split('T')[0];
       const testTime = new Date().toLocaleTimeString();
-  
       const { data, error } = await supabase.from('short_sightedness_tests').insert([
         {
           profile_id: profileId,
           test_date: testDate,
           test_time: testTime,
-          test_name: 'Snellen Chart Test',
+          test_name: 'Snellen Digit Chart Test',
           score_left_eye: results.leftEye,
           score_right_eye: results.rightEye,
-          mode: 'with speech',
+          mode: 'without speech',
         },
       ]).select();
-  
       if (error) {
         console.error('Detailed Error Inserting Test Results:', error);
         Alert.alert('Error', 'Failed to save test results. Please try again.');
@@ -136,139 +132,20 @@ const SnellenChartTest = () => {
       Alert.alert('Error', 'An unexpected error occurred. Please try again.');
     }
   };
-  
 
-  const processTranscribedText = (text) => {
-    if (!text) return '';
-  
-    // Remove non-alphanumeric characters
-    const cleanedText = text.replace(/[^a-zA-Z0-9]/g, '').trim();
-  
-    // Map common misrecognized words to numbers
-    const numberMappings = {
-      // E
-      'e': 'E', 'ee': 'E', 'eh': 'E', 'eeh': 'E', 'ehh': 'E', 'eah': 'E', 'ey': 'E', 'ay': 'E','you': 'E','yeah':'E','mmm':'E','eat':'E','mm':'E',
-
-      // F
-      'f': 'F', 'eff': 'F', 'fe': 'F', 'ff': 'F', 'ef': 'F', 'fah': 'F', 'fa': 'F','if':'F',
-
-      // P
-      'p': 'P', 'pee': 'P', 'pea': 'P', 'pi': 'P', 'puh': 'P', 'pea': 'P', 'pee-ah': 'P','be':'P','bee':'P',
-
-      // T
-      't': 'T', 'tee': 'T', 'tea': 'T', 'te': 'T', 'tuh': 'T', 'tay': 'T', 'ta': 'T',
-
-      // O
-      'o': 'O', 'oh': 'O', 'zero': 'O', 'aw': 'O', 'ah': 'O', 'ooh': 'O', 'ohh': 'O', 'oah': 'O',
-
-      // Z
-      'z': 'Z', 'zee': 'Z', 'zed': 'Z', 'zuh': 'Z', 'zee-ah': 'Z', 'zah': 'Z', 'zahh': 'Z',
-
-      // L
-      'l': 'L', 'el': 'L', 'ell': 'L', 'le': 'L', 'el-oh': 'L', 'luh': 'L', 'ell-ah': 'L',
-
-      // D
-      'd': 'D', 'dee': 'D', 'de': 'D', 'doh': 'D', 'duh': 'D', 'di': 'D', 'dah': 'D', 'deh': 'D','deet': 'D','the': 'D',
-
-      // C
-      'c': 'C', 'see': 'C', 'sea': 'C', 'ce': 'C', 'suh': 'C', 'seh': 'C', 'ceh': 'C', 'cah': 'C',
-    };
-  
-    // Convert cleaned text to lowercase and check for mappings
-    const processedText = cleanedText.toLowerCase();
-    return numberMappings[processedText] || cleanedText;
-  };
-  
-
-  const startRecording = async () => {
-    // Reset previous transcriptions and hide the wait message on new recording
-    setTranscribedText("");
-    setIsProcessing(false); // Reset processing state for a new recording
-    try {
-      await Audio.requestPermissionsAsync();
-      const { recording } = await Audio.Recording.createAsync(
-        Audio.RecordingOptionsPresets.HIGH_QUALITY
-      );
-      setRecording(recording);
-      setIsRecording(true);
-    } catch (err) {
-      console.error('Failed to start recording', err);
-    }
-  };
-
-  const stopRecording = async () => {
-    
-    if (recording) {
-      setIsProcessing(true); // Set processing to true when recording stops
-      setIsRecording(false);
-      await recording.stopAndUnloadAsync();
-      const uri = recording.getURI();
-      if (uri) {
-        uploadAudio(uri);
-      }
-      setRecording(null);
-    }
-  };
-
-  const uploadAudio = async (uri) => {
-    const formData = new FormData();
-    formData.append('audio_data', {
-      uri,
-      type: 'audio/wav',
-      name: 'recording.wav',
-    });
-
-    try {
-      const response = await axios.post('https://gazelle-distinct-jay.ngrok-free.app/transcribe', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
-      
-      const rawTranscribedText = response.data?.text || response.data || '';
-      const processedText = processTranscribedText(rawTranscribedText);
-      
-      setTranscribedText(processedText);
-      setShowConfirmation(true);
-      
-      console.log('Raw transcribed text:', rawTranscribedText);
-      console.log('Processed text:', processedText);
-    } catch (error) {
-      console.error('Error uploading audio:', error);
-      setTranscribedText('');
-    }
-  };
-
-  const handleSubmitAnswer = () => {
-    setShowConfirmation(false);
-    handleAnswer(transcribedText);
-    setTranscribedText('');
-  };
-
-  const handleRecordAgain = () => {
-    setShowConfirmation(false);
-    setTranscribedText('');
-  };
-
-  const handleAnswer = (answer) => {
+  const handleAnswer = (selectedAnswer) => {
     const currentQuestion = snellenDigitChart[currentLine].questions[currentQuestionIndex];
-    const processedAnswer = processTranscribedText(answer);
     const correctAnswer = currentQuestion.answer;
-  
-  
-    if (processedAnswer === correctAnswer) {
+    if (selectedAnswer === correctAnswer) {
       // Correct answer
       setConsecutiveMistakes(0);
-      
       setLastSuccessfulPower(snellenDigitChart[currentLine].score);
-  
       if (currentLine === snellenDigitChart.length - 1) {
         if (coveringLeftEye) {
           setResults(prev => ({
             ...prev,
             leftEye: snellenDigitChart[currentLine].score,
           }));
-          
           // Reset for right eye
           setCoveringLeftEye(false);
           setCurrentLine(0);
@@ -281,7 +158,6 @@ const SnellenChartTest = () => {
             ...prev,
             rightEye: snellenDigitChart[currentLine].score,
           }));
-          
           setTestComplete(true);
         }
       } else {
@@ -292,17 +168,14 @@ const SnellenChartTest = () => {
     } else {
       // Wrong answer
       setConsecutiveMistakes(prev => prev + 1);
-  
       if (consecutiveMistakes + 1 >= 2) {
         // Two consecutive wrong answers - end test for current eye
         const lastSuccessfulLineScore = snellenDigitChart[Math.max(0, currentLine - 1)].score;
-        
         if (coveringLeftEye) {
           setResults(prev => ({
             ...prev,
             leftEye: lastSuccessfulLineScore,
           }));
-         
           // Reset for right eye
           setCoveringLeftEye(false);
           setCurrentLine(0);
@@ -313,7 +186,7 @@ const SnellenChartTest = () => {
           setResults(prev => ({
             ...prev,
             rightEye: lastSuccessfulLineScore,
-          }));       
+          }));
           setTestComplete(true);
         }
       } else {
@@ -326,19 +199,17 @@ const SnellenChartTest = () => {
       }
     }
   };
-  
-  // Add an effect to trigger saveTestResults when test is complete
+
+  // Save test results when test is complete.
   useEffect(() => {
     if (testComplete && results.leftEye && results.rightEye) {
       saveTestResults();
     }
   }, [testComplete, results]);
-  
-  
-  
 
   const renderCurrentLine = () => {
     const currentQuestion = snellenDigitChart[currentLine].questions[currentQuestionIndex];
+    const options = getOptions(currentQuestion.answer);
 
     return (
       <View style={styles.contentContainer}>
@@ -352,36 +223,48 @@ const SnellenChartTest = () => {
         </Text>
         <Text style={styles.question}>{currentQuestion.question}</Text>
         
-        {showConfirmation ? (
-          <View style={styles.confirmationContainer}>
-            <Text style={styles.transcribedText}>Your answer: {transcribedText}</Text>
-            <View style={styles.confirmationButtons}>
-              <TouchableOpacity style={styles.confirmButton} onPress={handleSubmitAnswer}>
-                <Text style={styles.buttonText}>Submit</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.confirmButton} onPress={handleRecordAgain}>
-                <Text style={styles.buttonText}>Record Again</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        ) : (
-          <TouchableOpacity
-            style={[styles.recordButton, isRecording && styles.recordingButton]}
-            onPress={isRecording ? stopRecording : startRecording}
-          >
-            <Text style={styles.buttonText}>
-              {isRecording ? "Stop Recording" : "Start Recording"}
-            </Text>
-          </TouchableOpacity>
-        )}
-
-        {isProcessing && !showConfirmation && (
-          <Text style={styles.waitMessage}>Please wait a few seconds for the transcription...</Text>
-        )}
+        <View style={styles.optionsContainer}>
+          {options.map((option, index) => (
+            <TouchableOpacity
+              key={index}
+              style={styles.optionButton}
+              onPress={() => handleAnswer(option)}
+            >
+              <Text style={styles.optionButtonText}>{option}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
       </View>
     );
   };
-  
+
+  const getResultDescription = (score) => {
+    if (!score) return '';
+    const [numerator, denominator] = score.split('/').map(Number);
+    const ratio = numerator / denominator;
+    let description = '';
+    let color = '#000'; // Default color
+    if (ratio <= 0.1) { // 6/60 or worse
+      description = 'Significant correction needed - Legally blind without correction';
+      color = 'red';
+    } else if (ratio <= 0.2) { // 6/30
+      description = 'Significant correction needed';
+      color = 'orange';
+    } else if (ratio <= 0.33) { // 6/20
+      description = 'Moderate correction needed';
+      color = 'yellow';
+    } else if (ratio <= 0.5) { // 6/15
+      description = 'Mild correction needed';
+      color = 'lightgreen';
+    } else if (ratio <= 0.66) { // 6/12
+      description = 'Near perfect vision';
+      color = 'green';
+    } else if (ratio <= 1) { // 6/9, 6/8, 6/6
+      description = 'Excellent vision';
+      color = 'darkgreen';
+    }
+    return { description, color };
+  };
 
   const renderResults = () => {
     return (
@@ -407,37 +290,6 @@ const SnellenChartTest = () => {
         </View>
       </ScrollView>
     );
-  };
-  const getResultDescription = (score) => {
-    if (!score) return '';
-  
-    const [numerator, denominator] = score.split('/').map(Number);
-    const ratio = numerator / denominator;
-  
-    let description = '';
-    let color = '#000'; // Default color
-  
-    if (ratio <= 0.1) { // 6/60 or worse
-      description = 'Significant correction needed - Legally blind without correction';
-      color = 'red';
-    } else if (ratio <= 0.2) { // 6/30
-      description = 'Significant correction needed';
-      color = 'orange';
-    } else if (ratio <= 0.33) { // 6/20
-      description = 'Moderate correction needed';
-      color = 'yellow';
-    } else if (ratio <= 0.5) { // 6/15
-      description = 'Mild correction needed';
-      color = 'lightgreen';
-    } else if (ratio <= 0.66) { // 6/12
-      description = 'Near perfect vision';
-      color = 'green';
-    } else if (ratio <= 1) { // 6/9, 6/8, 6/6
-      description = 'Excellent vision';
-      color = 'darkgreen';
-    }
-  
-    return { description, color };
   };
 
   return (
@@ -515,6 +367,23 @@ const styles = StyleSheet.create({
     borderRadius: 25,
     width: '45%',
   },
+  optionsContainer: {
+    width: '100%',
+    alignItems: 'center',
+  },
+  optionButton: {
+    backgroundColor: '#0057B7',
+    paddingVertical: 15,
+    paddingHorizontal: 30,
+    borderRadius: 25,
+    marginTop: 15,
+    width: '60%',
+  },
+  optionButtonText: {
+    color: '#fff',
+    fontSize: 18,
+    textAlign: 'center',
+  },
   resultsContainer: {
     alignItems: 'center',
     paddingVertical: 20,
@@ -549,4 +418,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default SnellenChartTest;
+export default SnellenDigitChartTestOptions;
