@@ -15,7 +15,7 @@ const foods = [
   {
     id: 2,
     name: 'Oranges',
-    image: require('@/assets/images/oranges.png'),
+    image: require('@/assets/images/almonds.png'),
     points: [
       'Loaded with Vitamin C which supports healthy blood vessels in the eyes.',
       'Reduces the risk of cataracts and macular degeneration.',
@@ -24,7 +24,7 @@ const foods = [
   {
     id: 3,
     name: 'Spinach',
-    image: require('@/assets/images/spinach.png'),
+    image: require('@/assets/images/almonds.png'),
     points: [
       'High in lutein and zeaxanthin, which protect the eyes from harmful light.',
       'Prevents eye diseases like macular degeneration.',

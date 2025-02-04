@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, TextInput, TouchableOpacity, Image, Alert } fro
 import { useRouter } from 'expo-router';
 import { supabase } from '../supabase'; // Supabase client import
 import healthykids from '@/assets/images/Healthykidicon.png';
-import googleIcon from '@/assets/images/google-icon.png';
+import googleIcon from '@/assets/images/google.png';
 import appleIcon from '@/assets/images/apple-icon.png';
 
 export default function SignInSignUp() {
